@@ -105,7 +105,7 @@ def ask(
     if print_message:
         print(message)
     messages = [
-        {"role": "system", "content": "You answer questions about Basel Framework."},
+        {"role": "system", "content": "Give precise, yet, detailed infomation with references."},
         {"role": "user", "content": message},
     ]
     response = client.chat.completions.create(
