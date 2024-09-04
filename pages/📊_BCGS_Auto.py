@@ -1,5 +1,13 @@
+from openai import OpenAI
+import numpy as np
+import pandas as pd
+import os
+import openpyxl
+from pathlib import Path
 import streamlit as st
 from base import request_gpt
+from stqdm import stqdm
+from io import BytesIO
 
 st.set_page_config(
     page_title="BCGS Auto", 
@@ -14,132 +22,176 @@ uploaded_file = st.file_uploader("Upload file")
 if not uploaded_file:
     st.stop()
 
+a = 'sk-proj-50i25Vf5uMtQ8EpYF'
+b = 'AyaT3BlbkFJ2B9b6oBxsJpx058Zxocv'
+client = OpenAI(api_key=a+b)
 
-prompt = """
-1.
-Đây là ngưỡng tham chiếu đánh giá hiệu năng của mô hình A-score:
--	AR A-score lớn hơn hoặc bằng 35%: Xanh. Khả năng phân biệt tốt
--	AR A-score lớn hơn hoặc bằng 25% và nhỏ hơn 35%: Vàng. Có thể chấp nhận
--	AR A-score nhỏ hơn 25%: Đỏ. Nằm ngoài khoảng chấp nhận
+def ask(client, mess, model="gpt-4o-mini-2024-07-18"):
+    #### QUERY CHATGPT ####
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "Give brief and precise answer"},
+            {"role": "user", "content": mess}
+        ])
+    text = []
 
-Đây là ví dụ về việc viết kết luận đánh giá hiệu năng giai đoạn giám sát mô hình các mô hình A-score:
--	Mô hình PD R:
-+ Giai đoạn phát triển mô hình: 36.18%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 29.59%
-•	Bao gồm các quan sát indeterminate: 29.35%
--	Mô hình PD I:
-+ Giai đoạn phát triển mô hình: 43.46%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 9.60%
-•	Bao gồm các quan sát indeterminate: 9.50%
--	Mô hình PD E:
-+ Giai đoạn phát triển mô hình: 37.20%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 26.03%
-•	Bao gồm các quan sát indeterminate: 25.83%
--	Mô hình PD U:
-+ Giai đoạn phát triển mô hình: 31.60%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 25.16%
-•	Bao gồm các quan sát indeterminate: 24.44%
+    # print in reverse order => first answer go first
+    for txt in response.choices[::-1]:
+            text.append(txt.message.content)
+    return text
 
-Kết luận: Đối với cấu phần A-score: khả năng phân biệt có sự sụt giảm so với giai đoạn xây dựng mô hình tuy nhiên giá trị AR A-score nằm trong/ xấp xỉ ngưỡng “Có thể chấp nhận” đối với các mô hình PD R, PD E, PD U (đối với cả 02 mẫu bao gồm/ không bao gồm indeterminate). Đối với mô hình PD I, giá trị AR A-score ở ngưỡng “Nằm ngoài khoảng chấp nhận” đối với cả 02 mẫu (bao gồm/ không bao gồm indeterminate).
+df = pd.read_excel(uploaded_file, sheet_name=None)
 
-2.
-Đây là ngưỡng tham chiếu đánh giá hiệu năng của mô hình B-score:
--	AR B-score lớn hơn hoặc bằng 55%: Xanh. Khả năng phân biệt tốt
--	AR B-score lớn hơn hoặc bằng 40% và nhỏ hơn 55%: Vàng. Có thể chấp nhận
--	AR B-score nhỏ hơn 40%: Đỏ. Nằm ngoài khoảng chấp nhận
+if not df:
+    st.stop()
 
-Đây là ví dụ về việc viết kết luận đánh giá hiệu năng giai đoạn giám sát mô hình các mô hình B-score:
--	Mô hình PD R:
-+ Giai đoạn phát triển mô hình: 82.04%
-+ Giai đoạn giám sát mô hình:
-•	Loại bỏ các quan sát indeterminate: 64.81%
-•	Bao gồm các quan sát indeterminate: 63.99%
--	Mô hình PD I:
-+ Giai đoạn phát triển mô hình: 77.27%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 67.83%
-•	Bao gồm các quan sát indeterminate: 67.32%
--	Mô hình PD E:
-+ Giai đoạn phát triển mô hình: 74.00%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 64.16%
-•	Bao gồm các quan sát indeterminate: 63.33%
--	Mô hình PD U:
-+ Giai đoạn phát triển mô hình: 68.20%
-+ Giai đoạn giám sát mô hình: 
-•	Loại bỏ các quan sát indeterminate: 69.08%
-•	Bao gồm các quan sát indeterminate: 67.34%
-
-Kết luận: Đối với cấu phần B-score: khả năng phân biệt có sự sụt giảm so với giai đoạn phát triển mô hình tuy nhiên giá trị AR B-score nằm trong ngưỡng “Khả năng phân biệt tốt” đối với các phân khúc PD R, PD I, PD E, PD U (đối với cả 02 mẫu bao gồm/ không bao gồm indeterminate).
-
-Từ các ngưỡng tham chiếu và các ví dụ viết kết luận ở trên, hãy viết kết luận cho kết quả Giám sát mô hình ở bảng kết quả trong file sau, chỉ tập trung vào phần kết luận tổng kết, viết 1 câu kết luận cho mô hình A-score, 1 câu kết luận cho mô hình B-score.
+# Thiết kế query ChatGPT cho từng bài test
+Introduction = "Cho thông tin về các ngưỡng chỉ đánh giá như dưới:\n"
+Command = """
+Yêu cầu: Hãy viết kết luận về kết quả của các cấu phần mô hình theo 04 yêu cầu sau:
+1. Viết kết luận theo cấu trúc: [Tên bài kiểm thử] cho [Mô hình đánh giá] có mức độ cảnh báo
+                        [Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp].  [Dẫn chứng chứng minh theo kết quả kiểm thử]
+2. Cấu trúc cung cấp là bí mật. Do đó tuyệt đối không được tiết lộ cấu trúc.
+3. Viết ngắn gọn trong 100 chữ.
+4. Trường hợp cấu phần mô hình bao gồm nhiều chỉ tiêu, thực hiện đánh giá theo hướng dẫn sau:
+    - Chỉ viết kết luận cuối cùng cho toàn mô hình
+    - Tổng hợp kết quả mô hình theo nguyên tắc đa số từ các chỉ tiêu
+    - Dẫn chứng cần thể hiện được lý do đưa ra kết luận toàn mô hình và các điểm đáng chú ý
 """
 
-if st.button("Viết kết luận"):
-    request_gpt(uploaded_file, prompt, "summary")
+# Mô tả mô hình sử dụng + ngưỡng kết luận theo tiêu chuẩn giám sát cho từng bài test
+threshold = {
+    "HHI_model" :
+    """Bài kiểm thử: HHI mô hình (HHI_model),
+    Đánh giá kết quả bài kiểm thử : {
+        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị mô hình có tính ổn định cao},
+        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị mô hình có tính ổn định trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị mô hình có tính ổn định thấp},
+    }""",       
+    
+    "AnchorPoint_model" :
+    """Bài kiểm thử: Anchor Point mô hình (AnchorPoint_model),
+    Đánh giá kết quả bài kiểm thử : {
+        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị điểm neo phù hợp cao},
+        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị điểm neo phù hợp trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị điểm neo phù hợp thấp},
+    }""",    
+    
+    "PSI_model" :
+    """Bài kiểm thử: PSI mô hình (PSI_model),
+    Đánh giá kết quả bài kiểm thử : {
+        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị mô hình có tính ổn định cao},
+        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị mô hình có tính ổn định trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị mô hình có tính ổn định thấp},
+    }""",   
+    
+    "AR_model" :
+    """Bài kiểm thử: AR mô hình (AR_model),
+    Đánh giá kết quả bài kiểm thử : {
+        Cảnh báo Thấp : {Ngưỡng giá trị : 0.6 =< x, Kết luận : Mức độ cảnh báo Thấp. Mô hình có khả năng phân biệt tốt},
+        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.3 =< x < 0.6, Kết luận : Mức độ cảnh báo Trung bình. Mô hình có khả năng phân biệt trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : x < 0.3, Kết luận : Mức độ cảnh báo Cao. Mô hình có khả năng phân biệt thấp},
+    }""",
+    
+    "AR_feature" :
+    """Bài kiểm thử: AR dữ liệu (AR_feature),
+    Đánh giá kết quả bài kiểm thử : {
+        Cảnh báo Thấp : {Ngưỡng giá trị : 0.6 =< x, Kết luận : Mức độ cảnh báo Thấp. Biến có khả năng phân biệt tốt},
+        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.3 =< x < 0.6, Kết luận : Mức độ cảnh báo Trung bình. Biến có khả năng phân biệt trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : x < 0.3, Kết luận : Mức độ cảnh báo Cao. Biến có khả năng phân biệt thấp},
+    }""",
+          
+}
+
+# Tạo các câu lệnh query cho từng mô hình
+all_query = []
+segmentation_col = 'Phân khúc'
+component_col = 'Cấu phần mô hình'
+for test_case in df:
+    df_by_testcase = df[test_case].ffill()
+    for test_segment in df_by_testcase[segmentation_col].unique():
+        df_by_segment = df_by_testcase[df_by_testcase[segmentation_col] == test_segment]
+        for component in df_by_segment[component_col].unique():
+            df_by_component = df_by_segment[df_by_segment[component_col] == component]
+            test_result = df_by_component.T.to_json(force_ascii = False)
+            query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình: " + str(test_result)
+            all_query.append([test_case, test_segment, component, query])
+
+list_query = pd.DataFrame(all_query).reset_index(drop=True)
+list_query.rename(columns={0: 'Test', 1: 'Model', 2: 'Component', 3: 'Query'}, inplace=True)
+
+result_query = []
+for i in stqdm(list_query.index):
+    print(list_query['Test'][i] + list_query['Model'][i])
+    text_ = ask(client, mess=list_query['Query'][i])
+    result_query.append(text_)
 
 
+# Tạo trường kết quả theo từng bài giám sát
+list_query['Results'] = result_query
+
+for i in df.keys():
+    if i != 'AR_feature':
+        df[i]['Results'] = list_query[list_query.Test == i].Results.values
+    else:
+        df['AR_feature'].loc[df['AR_feature']['Cấu phần mô hình'].notna(), 'Results'] = list_query[list_query.Test == 'AR_feature'].Results.values
+
+# Query ChatGPT tổng hợp các bài giám sát theo mô hình
+Model_intro = """
+Sử dụng các thông tin được cung cấp dưới đây, hãy tổng hợp kết luận về hiệu năng và chất lượng của mô hình từ kết luận các bài kiểm thử.
+"""
+
+Model_assessment = """
+Yêu cầu: Tổng hợp kết luận từ các bài kiểm thử theo nguyên tắc:
+1. Đủ thông tin các bài kiểm thử được sử dụng.
+2. Phải đưa ra được kết luận về hiệu năng mô hình.
+3. Tóm tắt ngắn gọn trong 100 từ.
+"""
 
 
+# Loop tổng hợp kết quả các bài test theo model
+model_test_result = []
+for model in list_query['Model'].unique():
+    for comp in list_query['Component'].unique():
+        model_test = list_query[(list_query['Model'] == model) & (list_query['Component'] == comp)]
+        all_test_results = (model_test.Test.str.strip() + ": " + model_test.Results.apply(lambda x: '\n'.join(x).replace('[', '').replace(']', '')).str.strip())
+        model_test_result.append([model, comp, '\n'.join(all_test_results)])
 
+# Tạo query cho từng mô hình
+combine_tests_by_model = pd.DataFrame(model_test_result)
+combine_tests_by_model.rename(columns={0: 'Model', 1: 'Component', 2: 'All_test_summary'}, inplace=True)
+combine_tests_by_model['Summary_query'] = Model_intro + "\n Kết luận các bài kiểm thử: " + combine_tests_by_model['All_test_summary'] + Model_assessment
 
-# Đây là ngưỡng tham chiếu đánh giá hiệu năng của mô hình Pooling:
-# -	AR Pooling ≥ 50%: Xanh. Khả năng phân biệt tốt
-# -	40% ≤ AR Pooling < 50%: Vàng. Có thể chấp nhận
-# -	AR Pooling < 40%: Đỏ. Nằm ngoài khoảng chấp nhận
+# Loop tổng hợp thông qua chatGPT
+summary_result = []
+for i in stqdm(combine_tests_by_model.index):
+    summary_text = ask(client, combine_tests_by_model['Summary_query'][i])
+    summary_result.append('\n'.join(summary_text))
 
-# Đây là bảng ngưỡng tham chiếu đánh giá Mức độ ổn định của mô hình;
-# -	PSI ≤ 0.1: Xanh. Phân phối ổn định
-# -	0.1 < AR ≤ 0.25: Vàng. Phân phối có sự dịch chuyển nhỏ
-# -	AR > 0.25: Đỏ. Phân phối có sự dịch chuyển lớn
+combine_tests_by_model['Summary result'] = summary_result
 
-# Đây là ví dụ về việc viết kết luận đánh giá Mức độ ổn định của các mô hình:
-# -	PD R: PSI = 0.167
-# -	PD I: PSI = PSI cấu phần A-Score = 0.264 và PSI cấu phần B-Score = 0.0912
-# -	PD T: PSI = 0.597
-# -	PD E: PSI = 0.0241
-# -	PD U: PSI = 0.0705
+df['Kết luận mô hình'] = combine_tests_by_model[['Model', 'Component', 'Summary result']].rename(columns={'Model': 'Mô hình', 'Component': 'Cấu phần mô hình', 'Summary result': 'Kết luận'})
 
-# Kết luận: Cấu phần phân nhóm Pooling của mô hình PD T có sự thay đối lớn trong phân phối, với kết quả chỉ số PSI nằm ở ngưỡng đỏ. Sự thay đổi trong phân phối và nguyên nhân đã được nhận thức và ghi nhận. Các mô hình khác có phân phối thay đổi không đáng kể, ngoại trừ cấu phần A-score của mô hình PD I có chỉ số PSI ở ngưỡng đỏ - tuy nhiên, cần lưu ý rằng cấu phần PD I A-score chứa các chỉ tiêu pilot từ chi nhánh và bộ mẫu phát triển (hiện đang làm cơ sở để thực hiện kiểm tra PSI) không bao phủ toàn bộ danh mục.
+# Function to create an Excel file in memory
+def to_excel(data):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        for sheet_name, df in data.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    return output.getvalue()
 
-# Đây là ngưỡng đánh giá mức độ tập trung của mô hình:
-# Mức độ tập trung của cấu phần phân nhóm Pooling được đo lường thông qua chỉ số mức độ tập trung của phân phối (Herfindahl-Hirschman Index - HHI). Theo thông lệ quốc tế, chỉ số này nhận giá trị từ 0.25 trở lên sẽ tương ứng với mức độ tập trung lớn của mô hình.
+# Convert the Excel file to bytes
+excel_data = to_excel(df)
 
-# Đây là ví dụ về việc viết kết luận đánh giá Mức độ tập trung của các mô hình:
+@st.experimental_fragment
+def download_file():
+    st.download_button(
+        label="Download Excel file",
+        data=excel_data,
+        file_name='output_gsmh.xlsx',
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+download_file()
 
-# -	PD R: HHI tập phát triển = 0.1788. HHI tập giám sát = 0.1739
-# -	PD I: HHI tập phát triển: Cấu phần A-score = 0.2266, cấu phần B-score = 0.2342. HHI tập giám sát: A-score = 0.2983, cấu phần B-score = 0.2366.
-# -	PD T: HHI tập phát triển = 0.0884. HHI tập giám sát = 0.1596
-# -	PD E: HHI tập phát triển = 0.3578. HHI tập giám sát = 0.3404
-# -	PD U: HHI tập phát triển = 0.1845. HHI tập giám sát = 0.1894
-
-# Kết luận: Tất cả các mô hình có mức độ tập trung tương đối nhất quán với kết quả xây dựng mô hình, ngoại trừ câu phần PD I A-score có HHI gia tăng ở ngưỡng đỏ - tuy nhiên, cần lưu ý rằng cấu phần PD I A-score chứa các chỉ tiêu pilot từ chi nhánh và bộ mẫu phát triển (hiện đang làm cơ sở để thực hiện kiểm tra HHI) không bao phủ toàn bộ danh mục.
-
-
-# Đánh giá hiệu năng của các chỉ tiêu (biến) thuộc cấu phần A-score, B-score
-# Tương tự như đánh giá hiệu năng cấp độ mô hình, chỉ số AR sẽ được sử dụng để đánh giá hiệu năng phân biệt của chỉ tiêu. Sụt giảm AR đáng kể được hiểu là sụt giảm từ 30% trở lên.
-# -	PD R:
-# + Cấu phần A-score:
-# •	Tuổi của khách hàng: AR mẫu phát triển = 2,45%. AR mẫu giám sát = 1,04%.
-# •	Loại cơ quan: AR mẫu phát triển = 21,45%. AR mẫu giám sát = 23,84%.
-# •	Hình thức thanh toán lương và thu nhập khác: AR mẫu phát triển = 16,90%. AR mẫu giám sát = 21,27%.
-# •	Tình trạng hôn nhân: AR mẫu phát triển = 3,85%. AR mẫu giám sát = 7,67%.
-# •	Số người trực tiếp phụ thuộc vào kinh tế của người vay: AR mẫu phát triển = 8,20%. AR mẫu giám sát = -3,49%.
-# •	Số năm làm việc trong lĩnh vực chuyên môn hiện tại: AR mẫu phát triển = 3,62%. AR mẫu giám sát = 6,40%.
-# •	Số tiền xin vay/ (Thu nhập của khách hàng x Kỳ hạn của khoản vay): AR mẫu phát triển = 13,02%. AR mẫu giám sát = -4,91%.
-# + Kết luận: Các chỉ tiêu có hiệu năng phân biệt sụt giảm không đáng kể / cải thiện so với giai đoạn xây dựng mô hình, ngoại trừ chỉ tiêu “Tuổi của khách hàng", “Số người trực tiếp phụ thuộc vào kinh tế của người vay” và “Số tiền xin vay/ Thu nhập của khách hàng x Kỳ hạn của khoản vay)”.
-# + Cấu phần B-score: 
-# •	Kỳ hạn của khoản vay (đơn vị: tháng): AR mẫu phát triển = 18,76%. AR mẫu giám sát = -0,88%.
-# •	Khách hàng có tài khoản tiết kiệm tại thời điểm quan sát: AR mẫu phát triển = 2,35%. AR mẫu giám sát = 7,72%.
-# •	Tuổi của khách hàng tại thời điểm quan sát: AR mẫu phát triển = 16,35%. AR mẫu giám sát = 9,70%.
-# •	Một tài sản bảo đảm cho nhiều khoản vay: AR mẫu phát triển = 11,85%. AR mẫu giám sát = 1,95%.
-# •	Trung bình số dư tài khoản thanh toán/ Trung bình dư nợ trong 6 tháng qua: AR mẫu phát triển = 40,88%. AR mẫu giám sát = 50,71%.
-# •	Trung bình số tiền thực trả/ Trung bình số tiền phải trả trong vòng 6 tháng qua: AR mẫu phát triển = 46,33%. AR mẫu giám sát = 14,88%.
-# •	Số lần quá hạn trong 6 tháng qua : AR mẫu phát triển = 65,41%. AR mẫu giám sát = 44,37%.
-# + Kết luận: Một số chỉ tiêu có hiệu năng suy giảm đáng kể, tuy nhiên, mô hình vẫn đang sử dụng một số chỉ tiêu có khả năng phân biệt rất cao, bao gồm “Trung bình số dư tài khoản thanh toán/ Trung bình dư nợ trong 6 tháng qua”, “Số lần quá hạn trong 6 tháng qua”.
-
-
+st.stop()
