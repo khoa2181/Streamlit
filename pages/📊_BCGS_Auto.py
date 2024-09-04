@@ -2,7 +2,6 @@ from openai import OpenAI
 import numpy as np
 import pandas as pd
 import os
-import openpyxl
 from pathlib import Path
 import streamlit as st
 from base import request_gpt
