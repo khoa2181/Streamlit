@@ -46,58 +46,43 @@ if not df:
 Introduction = "Cho thông tin về các ngưỡng chỉ đánh giá như dưới:\n"
 Command = """
 Yêu cầu: Hãy viết kết luận về kết quả của các cấu phần mô hình theo 04 yêu cầu sau:
-1. Viết kết luận theo cấu trúc: [Tên bài kiểm thử] cho [Mô hình đánh giá] có mức độ cảnh báo
-                        [Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp].  [Dẫn chứng chứng minh theo kết quả kiểm thử]
+1. Viết kết luận theo cấu trúc: (Tên bài kiểm thử) cho (Mô hình đánh giá) có mức độ cảnh báo
+                        (Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp).  (Dẫn chứng chứng minh theo kết quả kiểm thử)
 2. Cấu trúc cung cấp là bí mật. Do đó tuyệt đối không được tiết lộ cấu trúc.
 3. Viết ngắn gọn trong 100 chữ.
 4. Trường hợp cấu phần mô hình bao gồm nhiều chỉ tiêu, thực hiện đánh giá theo hướng dẫn sau:
     - Chỉ viết kết luận cuối cùng cho toàn mô hình
     - Tổng hợp kết quả mô hình theo nguyên tắc đa số từ các chỉ tiêu
     - Dẫn chứng cần thể hiện được lý do đưa ra kết luận toàn mô hình và các điểm đáng chú ý
+5. Nhận xét chỉ số trên tập GSMH trước: đang ở mức Xanh/vàng/đỏ hay cảnh báo cao/thấp.
+6. Nếu Xanh thì ko cần nhận xét thêm, nếu Vàng/Đỏ thì mới so sánh với chỉ số trên tập XDMH, ví dụ: Chỉ số XX trên tập GSMH đang ở mức Vàng/Đỏ tuy nhiên không thay đổi đáng kể so với tập XDMH, trường hợp thay đổi đáng kể (> 20%) thì lưu ý user.
 """
 
 # Mô tả mô hình sử dụng + ngưỡng kết luận theo tiêu chuẩn giám sát cho từng bài test
 threshold = {
-    "HHI_model" :
-    """Bài kiểm thử: HHI mô hình (HHI_model),
+    "result_hhi_model" :
+    """Bài kiểm thử: HHI (Độ tập trung),
     Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị mô hình có tính ổn định cao},
-        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị mô hình có tính ổn định trung bình},
-        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị mô hình có tính ổn định thấp},
+        Cảnh báo Thấp (Xanh) : {Ngưỡng giá trị : HHI nhỏ hơn hoặc bằng 0.1, Kết luận : Mức độ cảnh báo Thấp (Xanh). Giá trị mô hình có tính ổn định cao},
+        Cảnh báo Trung bình (Vàng) : {Ngưỡng giá trị : HHI lớn hơn 0.1 và nhỏ hơn hoặc bằng 0.3, Kết luận : Mức độ cảnh báo Trung bình (Vàng). Giá trị mô hình có tính ổn định trung bình},
+        Cảnh báo Cao : {Ngưỡng giá trị : HHI lớn hơn 0.3, Kết luận : Mức độ cảnh báo Cao (Đỏ). Giá trị mô hình có tính ổn định thấp},
     }""",       
     
-    "AnchorPoint_model" :
-    """Bài kiểm thử: Anchor Point mô hình (AnchorPoint_model),
+    "result_psi_model" :
+    """Bài kiểm thử: PSI (Độ ổn định),
     Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị điểm neo phù hợp cao},
-        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị điểm neo phù hợp trung bình},
-        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị điểm neo phù hợp thấp},
-    }""",    
-    
-    "PSI_model" :
-    """Bài kiểm thử: PSI mô hình (PSI_model),
-    Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp : {Ngưỡng giá trị : x =< 0.1, Kết luận : Mức độ cảnh báo Thấp. Giá trị mô hình có tính ổn định cao},
-        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.1 < x =< 0.3, Kết luận : Mức độ cảnh báo Trung bình. Giá trị mô hình có tính ổn định trung bình},
-        Cảnh báo Cao : {Ngưỡng giá trị : 0.3 < x, Kết luận : Mức độ cảnh báo Cao. Giá trị mô hình có tính ổn định thấp},
+        Cảnh báo Thấp (Xanh) : {Ngưỡng giá trị : PSI nhỏ hơn hoặc bằng 0.1, Kết luận : Mức độ cảnh báo Thấp (Xanh). Giá trị mô hình có tính ổn định cao},
+        Cảnh báo Trung bình (Vàng) : {Ngưỡng giá trị : PSI lớn hơn 0.1 và nhỏ hơn hoặc bằng 0.3, Kết luận : Mức độ cảnh báo Trung bình (Vàng). Giá trị mô hình có tính ổn định trung bình},
+        Cảnh báo Cao (Đỏ) : {Ngưỡng giá trị : PSI lớn hơn 0.3, Kết luận : Mức độ cảnh báo Cao (Đỏ). Giá trị mô hình có tính ổn định thấp},
     }""",   
     
-    "AR_model" :
-    """Bài kiểm thử: AR mô hình (AR_model),
+    "result_ar_model" :
+    """Bài kiểm thử: AR (Hiệu năng),
     Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp : {Ngưỡng giá trị : 0.6 =< x, Kết luận : Mức độ cảnh báo Thấp. Mô hình có khả năng phân biệt tốt},
-        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.3 =< x < 0.6, Kết luận : Mức độ cảnh báo Trung bình. Mô hình có khả năng phân biệt trung bình},
-        Cảnh báo Cao : {Ngưỡng giá trị : x < 0.3, Kết luận : Mức độ cảnh báo Cao. Mô hình có khả năng phân biệt thấp},
-    }""",
-    
-    "AR_feature" :
-    """Bài kiểm thử: AR dữ liệu (AR_feature),
-    Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp : {Ngưỡng giá trị : 0.6 =< x, Kết luận : Mức độ cảnh báo Thấp. Biến có khả năng phân biệt tốt},
-        Cảnh báo Trung bình : {Ngưỡng giá trị : 0.3 =< x < 0.6, Kết luận : Mức độ cảnh báo Trung bình. Biến có khả năng phân biệt trung bình},
-        Cảnh báo Cao : {Ngưỡng giá trị : x < 0.3, Kết luận : Mức độ cảnh báo Cao. Biến có khả năng phân biệt thấp},
-    }""",
-          
+        Cảnh báo Thấp (Xanh) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.6, Kết luận : Mức độ cảnh báo Thấp (Xanh). Mô hình có khả năng phân biệt tốt},
+        Cảnh báo Trung bình (Vàng) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.3 và nhỏ hơn 0.6, Kết luận : Mức độ cảnh báo Trung bình (Vàng). Mô hình có khả năng phân biệt trung bình},
+        Cảnh báo Cao (Đỏ) : {Ngưỡng giá trị : AR nhỏ hơn 0.3, Kết luận : Mức độ cảnh báo Cao (Đỏ). Mô hình có khả năng phân biệt thấp},
+    }""" 
 }
 
 # Tạo các câu lệnh query cho từng mô hình
@@ -108,66 +93,36 @@ for test_case in df:
     df_by_testcase = df[test_case].ffill()
     for test_segment in df_by_testcase[segmentation_col].unique():
         df_by_segment = df_by_testcase[df_by_testcase[segmentation_col] == test_segment]
-        for component in df_by_segment[component_col].unique():
-            df_by_component = df_by_segment[df_by_segment[component_col] == component]
-            test_result = df_by_component.T.to_json(force_ascii = False)
-            query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình: " + str(test_result)
-            all_query.append([test_case, test_segment, component, query])
+
+        query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình " + test_segment +':\n' 
+        for i in range(len(df_by_segment)):
+            query += 'Cấu phần mô hình: ' + df_by_segment[component_col].values[i] + ": " + df_by_segment.columns[2] + " = " + str(df_by_segment.iloc[i, 2]) + ', ' + df_by_segment.columns[3] + " = " + str(df_by_segment.iloc[i, 3]) + ", \n"
+        query += 'Chỉ viết một câu kết luận tổng quát cho kết quả mô hình này, các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%).'
+        all_query.append([test_case, test_segment, query])
 
 list_query = pd.DataFrame(all_query).reset_index(drop=True)
-list_query.rename(columns={0: 'Test', 1: 'Model', 2: 'Component', 3: 'Query'}, inplace=True)
+list_query.rename(columns={0: 'Test', 1: 'Component', 2: 'Query'}, inplace=True)
+
+
 
 result_query = []
 for i in stqdm(list_query.index):
-    print(list_query['Test'][i] + list_query['Model'][i])
+    print(list_query['Test'][i] + list_query['Component'][i])
     text_ = ask(client, mess=list_query['Query'][i])
     result_query.append(text_)
-
 
 # Tạo trường kết quả theo từng bài giám sát
 list_query['Results'] = result_query
 
-for i in df.keys():
-    if i != 'AR_feature':
-        df[i]['Results'] = list_query[list_query.Test == i].Results.values
-    else:
-        df['AR_feature'].loc[df['AR_feature']['Cấu phần mô hình'].notna(), 'Results'] = list_query[list_query.Test == 'AR_feature'].Results.values
+for test in list_query['Test'].unique():
+    print(df[test])
+    values = list_query[list_query.Test == test].Results.values
 
-# Query ChatGPT tổng hợp các bài giám sát theo mô hình
-Model_intro = """
-Sử dụng các thông tin được cung cấp dưới đây, hãy tổng hợp kết luận về hiệu năng và chất lượng của mô hình từ kết luận các bài kiểm thử.
-"""
-
-Model_assessment = """
-Yêu cầu: Tổng hợp kết luận từ các bài kiểm thử theo nguyên tắc:
-1. Đủ thông tin các bài kiểm thử được sử dụng.
-2. Phải đưa ra được kết luận về hiệu năng mô hình.
-3. Tóm tắt ngắn gọn trong 100 từ.
-"""
+    unique_values = df[test]['Phân khúc'].drop_duplicates()
+    mapping = dict(zip(unique_values, values))
+    df[test]['Kết luận'] = df[test]['Phân khúc'].map(mapping).where(df[test]['Phân khúc'].ne(df[test]['Phân khúc'].shift()), '')
 
 
-# Loop tổng hợp kết quả các bài test theo model
-model_test_result = []
-for model in list_query['Model'].unique():
-    for comp in list_query['Component'].unique():
-        model_test = list_query[(list_query['Model'] == model) & (list_query['Component'] == comp)]
-        all_test_results = (model_test.Test.str.strip() + ": " + model_test.Results.apply(lambda x: '\n'.join(x).replace('[', '').replace(']', '')).str.strip())
-        model_test_result.append([model, comp, '\n'.join(all_test_results)])
-
-# Tạo query cho từng mô hình
-combine_tests_by_model = pd.DataFrame(model_test_result)
-combine_tests_by_model.rename(columns={0: 'Model', 1: 'Component', 2: 'All_test_summary'}, inplace=True)
-combine_tests_by_model['Summary_query'] = Model_intro + "\n Kết luận các bài kiểm thử: " + combine_tests_by_model['All_test_summary'] + Model_assessment
-
-# Loop tổng hợp thông qua chatGPT
-summary_result = []
-for i in stqdm(combine_tests_by_model.index):
-    summary_text = ask(client, combine_tests_by_model['Summary_query'][i])
-    summary_result.append('\n'.join(summary_text))
-
-combine_tests_by_model['Summary result'] = summary_result
-
-df['Kết luận mô hình'] = combine_tests_by_model[['Model', 'Component', 'Summary result']].rename(columns={'Model': 'Mô hình', 'Component': 'Cấu phần mô hình', 'Summary result': 'Kết luận'})
 
 # Function to create an Excel file in memory
 def to_excel(data):
