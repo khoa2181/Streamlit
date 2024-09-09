@@ -93,7 +93,7 @@ for test_case in df:
         query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình " + test_segment +':\n' 
         for i in range(len(df_by_segment)):
             query += 'Cấu phần mô hình: ' + df_by_segment[component_col].values[i] + ": " + df_by_segment.columns[2] + " = " + str(df_by_segment.iloc[i, 2]) + ', ' + df_by_segment.columns[3] + " = " + str(df_by_segment.iloc[i, 3]) + ", \n"
-        query += 'Các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%).'
+        query += 'Các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%). No Yapping.'
         all_query.append([test_case, test_segment, query])
 
 list_query = pd.DataFrame(all_query).reset_index(drop=True)
@@ -103,7 +103,7 @@ list_query.rename(columns={0: 'Test', 1: 'Component', 2: 'Query'}, inplace=True)
 
 result_query = []
 for i in stqdm(list_query.index):
-    print(list_query['Test'][i] + list_query['Component'][i])
+    # print(list_query['Query'][i])
     text_ = ask(client, mess=list_query['Query'][i])
     result_query.append(text_)
 
