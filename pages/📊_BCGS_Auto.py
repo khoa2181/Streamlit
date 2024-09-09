@@ -79,9 +79,9 @@ threshold = {
     "result_ar_model" :
     """Bài kiểm thử: AR (Hiệu năng),
     Đánh giá kết quả bài kiểm thử : {
-        Cảnh báo Thấp (Xanh) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.6, Kết luận : Mức độ cảnh báo Thấp (Xanh). Mô hình có khả năng phân biệt tốt},
-        Cảnh báo Trung bình (Vàng) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.3 và nhỏ hơn 0.6, Kết luận : Mức độ cảnh báo Trung bình (Vàng). Mô hình có khả năng phân biệt trung bình},
-        Cảnh báo Cao (Đỏ) : {Ngưỡng giá trị : AR nhỏ hơn 0.3, Kết luận : Mức độ cảnh báo Cao (Đỏ). Mô hình có khả năng phân biệt thấp},
+        Cảnh báo Thấp (Xanh) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.5, Kết luận : Mức độ cảnh báo Thấp (Xanh). Mô hình có khả năng phân biệt tốt},
+        Cảnh báo Trung bình (Vàng) : {Ngưỡng giá trị : AR lớn hơn hoặc bằng 0.25 và nhỏ hơn 0.5, Kết luận : Mức độ cảnh báo Trung bình (Vàng). Mô hình có khả năng phân biệt trung bình},
+        Cảnh báo Cao (Đỏ) : {Ngưỡng giá trị : AR nhỏ hơn 0.25, Kết luận : Mức độ cảnh báo Cao (Đỏ). Mô hình có khả năng phân biệt thấp},
     }""" 
 }
 
