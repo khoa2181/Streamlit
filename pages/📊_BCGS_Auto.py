@@ -46,7 +46,8 @@ if not df:
 Introduction = "Cho thông tin về các ngưỡng chỉ đánh giá như dưới:\n"
 Command = """
 Yêu cầu: Hãy viết kết luận về kết quả của các cấu phần mô hình theo 4 yêu cầu sau:
-1. Viết kết luận theo cấu trúc: (Tên bài kiểm thử) cho (Mô hình đánh giá) có mức độ cảnh báo
+1. Viết kết luận theo cấu trúc: giá trị nhỏ nhất của kết quả tập GSMH là bao nhiêu, giá trị lớn nhất của kết quả tập GSMH là bao nhiêu, có bao nhiêu cấu phần ở ngưỡng xanh, bao nhiêu cấu phần ở ngưỡng vàng, bao nhiêu cấu phần ở ngưỡng đỏ
+1. Tiếp theo thêm 1 câu kết luận theo cấu trúc: (Tên bài kiểm thử) cho (Mô hình đánh giá) có mức độ cảnh báo
                         (Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp, mức đánh giá của mỗi phân khúc là mức cảnh báo cao nhất trong tất cả các cấu phần mô hình).  (Dẫn chứng chứng minh theo kết quả kiểm thử)
 2. Viết ngắn gọn trong 100 chữ.
 3. Nhận xét chỉ số trên tập GSMH trước: đang ở mức Xanh/vàng/đỏ. Nếu Xanh thì không cần nhận xét thêm, nếu Vàng/Đỏ thì mới so sánh với chỉ số trên tập XDMH, ví dụ: Chỉ số XX trên tập GSMH đang ở mức Vàng/Đỏ tuy nhiên không thay đổi đáng kể so với tập XDMH, trường hợp thay đổi đáng kể thì lưu ý user.
@@ -92,7 +93,7 @@ for test_case in df:
         query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình " + test_segment +':\n' 
         for i in range(len(df_by_segment)):
             query += 'Cấu phần mô hình: ' + df_by_segment[component_col].values[i] + ": " + df_by_segment.columns[2] + " = " + str(df_by_segment.iloc[i, 2]) + ', ' + df_by_segment.columns[3] + " = " + str(df_by_segment.iloc[i, 3]) + ", \n"
-        query += 'Chỉ viết một câu kết luận tổng quát cho kết quả mô hình này, các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%).'
+        query += 'Các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%).'
         all_query.append([test_case, test_segment, query])
 
 list_query = pd.DataFrame(all_query).reset_index(drop=True)
