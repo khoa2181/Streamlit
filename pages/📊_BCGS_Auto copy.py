@@ -97,7 +97,7 @@ for test_case in df:
         query = Introduction + "Ngưỡng đánh giá: " + str(threshold[test_case]) + Command + "Kết quả mô hình " + test_segment +':\n' 
         for i in range(len(df_by_segment)):
             query += 'Cấu phần mô hình: ' + df_by_segment[component_col].values[i] + ": " + df_by_segment.columns[2] + " = " + str(df_by_segment.iloc[i, 2]) + ', ' + df_by_segment.columns[3] + " = " + str(df_by_segment.iloc[i, 3]) + ", \n"
-        query += 'Chỉ viết một câu kết luận tổng quát cho kết quả mô hình này'
+        query += 'Chỉ viết một câu kết luận tổng quát cho kết quả mô hình này, các số dẫn chứng viết dưới dạng phần trăm và có hai chữ số sau dấu chấm (Ví dụ: 10.34%).'
         all_query.append([test_case, test_segment, query])
 
 list_query = pd.DataFrame(all_query).reset_index(drop=True)
