@@ -46,11 +46,11 @@ if not df:
 Introduction = "Cho thông tin về các ngưỡng chỉ đánh giá như dưới:\n"
 Command = """
 Yêu cầu: Hãy viết kết luận về kết quả của các cấu phần mô hình theo 5 yêu cầu sau:
-1. Viết kết luận theo cấu trúc: giá trị nhỏ nhất của kết quả tập GSMH là bao nhiêu, giá trị lớn nhất của kết quả tập GSMH là bao nhiêu, có bao nhiêu cấu phần ở ngưỡng xanh, bao nhiêu cấu phần ở ngưỡng vàng, bao nhiêu cấu phần ở ngưỡng đỏ
+1. Viết kết luận theo cấu trúc: giá trị nhỏ nhất của kết quả tập GSMH là bao nhiêu, giá trị lớn nhất của kết quả tập GSMH là bao nhiêu, có bao nhiêu cấu phần có kết quả tập GSMH ở ngưỡng xanh, bao nhiêu cấu phần có kết quả tập GSMH ở ngưỡng vàng, bao nhiêu cấu phần có kết quả tập GSMH ở ngưỡng đỏ
 2. Tiếp theo thêm 1 câu kết luận theo cấu trúc: (Tên bài kiểm thử) cho (Mô hình đánh giá) có mức độ cảnh báo
-                        (Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp, mức đánh giá của mỗi phân khúc là mức cảnh báo cao nhất trong tất cả các cấu phần mô hình).  (Dẫn chứng chứng minh theo kết quả kiểm thử)
+                        (Đánh giá mức độ cảnh báo kết quả bài kiểm thử theo ngưỡng được cung cấp, mức đánh giá kết quả tập GSMH của mỗi phân khúc là mức cảnh báo cao nhất của tập GSMH trong tất cả các cấu phần mô hình).  (Dẫn chứng chứng minh theo kết quả kiểm thử)
 3. Viết ngắn gọn trong 100 chữ.
-4. Nhận xét chỉ số trên tập GSMH trước: đang ở mức Xanh/vàng/đỏ. Nếu Xanh thì không cần nhận xét thêm, nếu Vàng/Đỏ thì mới so sánh với chỉ số trên tập XDMH, ví dụ: Chỉ số XX trên tập GSMH đang ở mức Vàng/Đỏ tuy nhiên không thay đổi đáng kể so với tập XDMH, trường hợp thay đổi đáng kể thì lưu ý user.
+4. Nhận xét chỉ số trên tập GSMH trước: đang ở mức Xanh/vàng/đỏ. Nếu Xanh thì không cần nhận xét thêm, nếu Vàng/Đỏ thì mới so sánh với chỉ số trên tập XDMH, ví dụ: Chỉ số XX trên tập GSMH đang ở mức Vàng/Đỏ tuy nhiên không thay đổi đáng kể so với tập XDMH, trường hợp thay đổi đáng kể thì lưu ý người đọc.
 5. Các ngưỡng đánh giá và số dẫn chứng bắt buộc phải chính xác, không được viết số sai hoặc không có trong dữ liệu.
 """
 
