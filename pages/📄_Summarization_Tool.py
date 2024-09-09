@@ -86,7 +86,7 @@ if limit_words == 'Yes':
         st.stop()
     prompt += f" The summary should be about {num_words} words long."
 
-st.markdown(prompt)
+# st.markdown(prompt)
 
 if st.button("Summarize"):
     request_gpt(uploaded_file, prompt, "summary")

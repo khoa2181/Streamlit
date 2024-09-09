@@ -83,7 +83,7 @@ if limit == 'Yes':
 
 prompt = prompt + " At the end of the test, add a new section to provide the correct answer and detailed explanation for each question. Also refer to the page number in the file for each question and quote the relevant text."
 
-st.markdown(prompt)
+# st.markdown(prompt)
 
 if st.button("Generate Test"):
     request_gpt(uploaded_file, prompt, "test")
