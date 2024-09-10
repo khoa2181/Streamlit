@@ -22,7 +22,7 @@ a = 'sk-proj-50i25Vf5uMtQ8EpYF'
 b = 'AyaT3BlbkFJ2B9b6oBxsJpx058Zxocv'
 client = OpenAI(api_key=a+b)
 
-def ask(client, mess, model="gpt-4o"):
+def ask(client, mess, model="gpt-4o-2024-08-06"):
     #### QUERY CHATGPT ####
     response = client.chat.completions.create(
         model=model,
